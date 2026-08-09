@@ -148,29 +148,6 @@ async def language_selection_callback(client: Client, callback_query: CallbackQu
 
 
 
-@DNSCHAT.on_message(filters.command("status"))
-async def status_command(client: Client, message: Message):
-    chat_id = message.chat.id
-
-    # Retrieve the status for the given chat_id
-    chat_status = await status_db.find_one({"chat_id": chat_id})
-
-    # Check if a status was found
-    if chat_status:
-        current_status = chat_status.get("status", "not found")
-        await message.reply(f"Chatbot status for this chat: **{current_status}**")
-    else:
-        await message.reply("No status found for this chat.")
-
-
-@DNSCHAT.on_message(filters.command(["lang", "language", "setlang"]))
-async def set_language(client: Client, message: Message):
-    await message.reply_text(
-        "Please select your chat language:",
-        reply_markup=generate_language_buttons(languages)
-    )
-
-
 @DNSCHAT.on_message(filters.command(["resetlang", "nolang"]))
 async def reset_language(client: Client, message: Message):
     chat_id = message.chat.id
@@ -180,6 +157,13 @@ async def reset_language(client: Client, message: Message):
 
 @DNSCHAT.on_message(filters.command("chatbot"))
 async def chatbot_command(client: Client, message: Message):
+    chat_id = message.chat.id
+    existing = await status_db.find_one({"chat_id": chat_id})
+    if not existing:
+        # New chat: default to disabled until explicitly enabled by admin
+        await status_db.update_one(
+            {"chat_id": chat_id}, {"$set": {"status": "disabled"}}, upsert=True
+        )
     await message.reply_text(
         f"Chat: {message.chat.title}\n**Choose an option to enable/disable the chatbot.**",
         reply_markup=InlineKeyboardMarkup(CHATBOT_ON),
@@ -278,24 +262,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             f"Chat: {query.message.chat.title}\n**Chatbot has been disabled.**"
         )
 
-    # Set chat language
-    elif query.data.startswith("setlang_"):
-        lang_code = query.data.split("_")[1]
-        chat_id = query.message.chat.id
-        if lang_code in languages.values():
-            lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": lang_code}}, upsert=True)
-            await query.answer(f"Your chat language has been set to {lang_code.title()}.", show_alert=True)
-            await query.message.edit_text(f"Chat language has been set to {lang_code.title()}.")
-        else:
-            await query.answer("Invalid language selection.", show_alert=True)
-
-    # Reset language selection to mix language
-    elif query.data == "nolang":
-        chat_id = query.message.chat.id
-        lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": "nolang"}}, upsert=True)
-        await query.answer("Bot language has been reset to mix language.", show_alert=True)
-        await query.message.edit_text("**Bot language has been reset to mix language.**")
-
     # Choose language for the chatbot
     elif query.data == "choose_lang":
         await query.answer("Choose chatbot language for this chat.", show_alert=True)
@@ -312,17 +278,27 @@ async def chatbot_response(client: Client, message: Message):
     try:
         chat_id = message.chat.id
         chat_status = await status_db.find_one({"chat_id": chat_id})
-        
-        if chat_status and chat_status.get("status") == "disabled":
+        is_group = message.chat.type in ("group", "supergroup")
+
+        if chat_status:
+            if chat_status.get("status") == "disabled":
+                return
+        elif is_group:
+            # New group with no status set yet: default OFF until admin enables it
             return
 
         if message.text and any(message.text.startswith(prefix) for prefix in ["!", "/", ".", "?", "@", "#"]):
-            if message.chat.type == "group" or message.chat.type == "supergroup":
+            if is_group:
                 return await add_served_chat(message.chat.id)
             else:
                 return await add_served_user(message.chat.id)
-        
-        if (message.reply_to_message and message.reply_to_message.from_user.id == DNSCHAT.id) or not message.reply_to_message:
+
+        replied_to_bot = (
+            message.reply_to_message
+            and message.reply_to_message.from_user
+            and message.reply_to_message.from_user.id == DNSCHAT.id
+        )
+        if replied_to_bot or not message.reply_to_message:
             await client.send_chat_action(message.chat.id, ChatAction.TYPING)
             reply_data = await get_reply(message.text)
 
@@ -355,6 +331,7 @@ async def chatbot_response(client: Client, message: Message):
     except MessageEmpty as e:
         return await message.reply_text("🙄🙄")
     except Exception as e:
+        LOGGER.error(f"chatbot_response error: {e}")
         return
 
 async def save_reply(original_message: Message, reply_message: Message):
@@ -443,9 +420,10 @@ async def save_reply(original_message: Message, reply_message: Message):
 async def get_reply(word: str):
     try:
         is_chat = await chatai.find({"word": word}).to_list(length=None)
-        if not is_chat:
-            is_chat = await chatai.find().to_list(length=None)
+        # No exact match: previously fell back to a random reply from the
+        # entire dataset, which produced unrelated/nonsensical replies.
+        # Return None instead so the caller sends a clear "I don't understand".
         return random.choice(is_chat) if is_chat else None
     except Exception as e:
-        print(f"Error in get_reply: {e}")
+        LOGGER.error(f"Error in get_reply: {e}")
         return None
