@@ -1,32 +1,53 @@
 {
-  "name": "DNSCHAT",
-  "description": "A telegram bot",
+  "name": "DNS CHAT BOT",
+  "description": "A Telegram AI Chat Bot based on Pyrogram",
   "logo": "https://files.catbox.moe/ugp6i0.jpg",
   "keywords": [
     "Chatbot",
     "mongodb",
     "python",
-    "pyrogram"
+    "pyrogram",
+    "ai"
   ],
-    "buildpacks": [{
-    "url": "heroku/python"
-  }],
-  "repository": "https://github.com/MISH0009/DNS-CHAT-BOT",
+  "repository": "https://github.com/hetuchutiya034-sketch/DNS-CHAT-BOT",
+  "stack": "container",
   "env": {
-    "BOT_TOKEN": {
-      "description": "A Bot token from @BotFather",
-      "required": true,
-      "value": ""
+    "API_ID": {
+      "description": "Get from https://my.telegram.org",
+      "required": true
     },
-    "OWNER_ID": {
-      "description": "Fill Here Your Owner User Id",
-      "required": true,
-      "value": "6955568347"
+    "API_HASH": {
+      "description": "Get from https://my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Bot token from @BotFather",
+      "required": true
     },
     "MONGO_URL": {
-      "description": "Get a mongodb url from https://cloud.mongodb.com.",
-      "required": true,
-      "value": ""
+      "description": "MongoDB URL from https://cloud.mongodb.com",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram User ID",
+      "required": true
+    },
+    "OWNER_USERNAME": {
+      "description": "Your Telegram username (without @)",
+      "required": false
+    },
+    "SUPPORT_GRP": {
+      "description": "Support group username or link",
+      "required": false
+    },
+    "UPDATE_CHNL": {
+      "description": "Update channel username or link",
+      "required": false
     }
-  }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
 }
