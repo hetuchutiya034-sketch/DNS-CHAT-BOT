@@ -3,7 +3,6 @@ from DNSCHAT import DNSCHAT
 from pyrogram import Client, filters
 
 
-
 START = """**
 {} ᴛʜᴇ ꜱᴜᴘᴇʀғᴀꜱᴛ ᴄʜᴀᴛʙᴏᴛ 💞
 
@@ -27,7 +26,17 @@ Cʟɪᴄᴋ ᴏɴ ᴛʜᴇ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ғᴏʀ ᴍᴏʀᴇ �
 Aʟʟ ᴄᴏᴍᴍᴀɴᴅs ᴄᴀɴ ʙᴇ ᴜsᴇᴅ ᴡɪᴛʜ: /**
 """
 
-TOOLS_DATA_READ = f"""**
+ADMIN_READ = f"sᴏᴏɴ"
+
+
+# The functions below build their text lazily (at call time) instead of at
+# import time, because DNSCHAT.mention / DNSCHAT.name / DNSCHAT.username are
+# only populated after the client has started (post get_me()). Baking them
+# into module-level string constants risked permanently freezing "None" into
+# these texts if this module is imported before the bot connects.
+
+def get_tools_data_read():
+    return f"""**
 ๏ ʜᴇʀᴇ ᴀʀᴇ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅs ғᴏʀ {DNSCHAT.mention}:
 
 ➻ /start ᴛᴏ ᴡᴀᴋᴇ ᴜᴘ ᴛʜᴇ ʙᴏᴛ ᴀɴᴅ ʀᴇᴄᴇɪᴠᴇ ᴀ ᴡᴇʟᴄᴏᴍᴇ ᴍᴇssᴀɢᴇ!
@@ -44,10 +53,12 @@ TOOLS_DATA_READ = f"""**
 ──────────────
 ➻ ᴜsᴇ /repo ᴛᴏ ɢᴇᴛ ᴛʜᴇ sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ ᴏғ ᴛʜᴇ ʙᴏᴛ!
 ──────────────
-๏ ᴍᴀᴅᴇ ʙʏ ➪ [RUDRA ✯ ᴏᴡɴᴇʀ](https://t.me/RU_DRA_65) 💞**
+๏ ᴍᴀᴅᴇ ʙʏ ➪ [KARTIK ✯ ᴏᴡɴᴇʀ](https://t.me/KARTIK_NISHAD_3) 💞**
 """
 
-CHATBOT_READ = f"""**
+
+def get_chatbot_read():
+    return f"""**
 ๏ ʜᴇʀᴇ ᴀʀᴇ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅs ғᴏʀ {DNSCHAT.mention}:
 
 ➻ /chatbot - ᴏᴘᴇɴs ᴏᴘᴛɪᴏns ᴛᴏ ᴇɴᴀʙʟᴇ ᴏʀ ᴅɪsᴀʙʟᴇ ᴛʜᴇ ᴄʜᴀᴛʙᴏᴛ.
@@ -58,14 +69,24 @@ CHATBOT_READ = f"""**
 ──────────────
 /status - ᴄʜᴇᴄᴋ ᴄʜᴀᴛʙᴏᴛ ᴀᴄᴛɪᴠᴇ ᴏʀ ɴᴏᴛ.
 ──────────────
-📡 ᴍᴀᴅᴇ ʙʏ ➪ [RUDRA ✯ ᴏᴡɴᴇʀ](https://t.me/RU_DRA_65) 💞**
+📡 ᴍᴀᴅᴇ ʙʏ ➪ [KARTIK ✯ ᴏᴡɴᴇʀ](https://t.me/KARTIK_NISHAD_3) 💞**
 """
 
-SOURCE_READ = f"**ʜᴇʏ, ᴛʜᴇ sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ ᴏғ [{DNSCHAT.name}](https://t.me/{DNSCHAT.username}) ɪs ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.**\n**ᴘʟᴇᴀsᴇ ғᴏʀᴋ ᴛʜᴇ ʀᴇᴘᴏ & ɢɪᴠᴇ ᴛʜᴇ sᴛᴀʀ ✯**\n**──────────────────**\n**ʜᴇʀᴇ ɪs ᴛʜᴇ [sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ](https://t.me/RU_DRA_098)**\n**──────────────────**\n**ɪғ ʏᴏᴜ ғᴀᴄᴇ ᴀɴʏ ᴘʀᴏʙʟᴇᴍ ᴛʜᴇɴ ᴄᴏɴᴛᴀᴄᴛ ᴀᴛ [sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ](https://t.me/RU_DRA_098).\n<b>||📡 ᴍᴀᴅᴇ ʙʏ ➪ [ᴅɴs ✯ ᴏᴡɴᴇʀ](https://t.me/RU_DRA_65) 💞**||</b>"
 
-ADMIN_READ = f"sᴏᴏɴ"
+def get_source_read():
+    return (
+        f"**ʜᴇʏ, ᴛʜᴇ sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ ᴏғ [{DNSCHAT.name}](https://t.me/{DNSCHAT.username}) ɪs ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.**\n"
+        "**ᴘʟᴇᴀsᴇ ғᴏʀᴋ ᴛʜᴇ ʀᴇᴘᴏ & ɢɪᴠᴇ ᴛʜᴇ sᴛᴀʀ ✯**\n"
+        "**──────────────────**\n"
+        "**ʜᴇʀᴇ ɪs ᴛʜᴇ [sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ](https://t.me/KARTIK_NISHAD_3)**\n"
+        "**──────────────────**\n"
+        "**ɪғ ʏᴏᴜ ғᴀᴄᴇ ᴀɴʏ ᴘʀᴏʙʟᴇᴍ ᴛʜᴇɴ ᴄᴏɴᴛᴀᴄᴛ ᴀᴛ [sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ](https://t.me/RU_DRA_098).\n"
+        "<b>||📡 ᴍᴀᴅᴇ ʙʏ ➪ [ᴅɴs ✯ ᴏᴡɴᴇʀ](https://t.me/KARTIK_NISHAD_3) 💞**||</b>"
+    )
 
-ABOUT_READ = f"""
+
+def get_about_read():
+    return f"""
 **➻ [{DNSCHAT.name}](https://t.me/{DNSCHAT.username}) ɪs ᴀɴ ᴀɪ ʙᴀsᴇᴅ ᴄʜᴀᴛ-ʙᴏᴛ.**
 **➻ [{DNSCHAT.name}](https://t.me/{DNSCHAT.username}) ʀᴇᴘʟɪᴇs ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴛᴏ ᴀ ᴜsᴇʀ.**
 **➻ ʜᴇʟᴘs ʏᴏᴜ ɪɴ ᴀᴄᴛɪᴠᴀᴛɪɴɢ ʏᴏᴜʀ ɢʀᴏᴜᴘs.**
