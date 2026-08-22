@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import importlib
+import os
 from flask import Flask
 import threading
 from pyrogram import idle
@@ -21,7 +22,6 @@ async def anony_boot():
         importlib.import_module("DNSCHAT.modules." + all_module)
         LOGGER.info(f"Successfully imported : {all_module}")
 
-    # Set bot commands
     try:
         await DNSCHAT.set_bot_commands(
             commands=[
@@ -44,29 +44,41 @@ async def anony_boot():
         LOGGER.error(f"Failed to set bot commands: {ex}")
 
     LOGGER.info(f"@{DNSCHAT.username} Started.")
-    try:
-        await DNSCHAT.send_message(int(OWNER_ID), f"{DNSCHAT.mention} has started")
-    except Exception as ex:
-        LOGGER.info(f"@{DNSCHAT.username} Started, please start the bot from owner id.")
-    
+
+    if OWNER_ID:
+        try:
+            await DNSCHAT.send_message(OWNER_ID, f"{DNSCHAT.mention} has started")
+        except Exception:
+            LOGGER.info(f"@{DNSCHAT.username} Started, please start the bot from owner id.")
+    else:
+        LOGGER.warning("OWNER_ID not set. Skipping start notification.")
+
     await idle()
 
 
-# Flask Server Code for Health Check
+# Flask Health Check (Render needs PORT from env)
 app = Flask(__name__)
 
-@app.route('/')
+
+@app.route("/")
 def home():
-    return "Bot is running"
+    return "DNS CHAT BOT is running"
+
+
+@app.route("/health")
+def health():
+    return "OK", 200
+
 
 def run_flask():
-    app.run(host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
 
 if __name__ == "__main__":
-    # Start Flask server in a new thread
-    flask_thread = threading.Thread(target=run_flask)
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
+    LOGGER.info(f"Health check server started on port {os.environ.get('PORT', 10000)}")
 
-    # Start the bot asynchronously
     asyncio.get_event_loop().run_until_complete(anony_boot())
     LOGGER.info("Stopping DNSCHAT Bot...")
