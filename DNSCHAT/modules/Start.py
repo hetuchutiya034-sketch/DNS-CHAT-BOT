@@ -8,7 +8,7 @@ from DNSCHAT import get_readable_time
 from DNSCHAT import DNSCHAT, mongo
 from datetime import datetime
 from pymongo import MongoClient
-from pyrogram.enums import ChatType
+from pyrogram.enums import ChatType, ParseMode
 from pyrogram import Client, filters
 from config import OWNER_ID, MONGO_URL, OWNER_USERNAME
 from pyrogram.errors import FloodWait, ChatAdminRequired
@@ -16,6 +16,7 @@ from DNSCHAT.database.chats import get_served_chats, add_served_chat
 from DNSCHAT.database.users import get_served_users, add_served_user
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, CallbackQuery
 from DNSCHAT.modules.helpers import (
+
     START,
     START_BOT,
     PNG_BTN,
@@ -67,6 +68,7 @@ IMG = [
 ]
 
 
+chatai = db.Word.WordDb if 'db' in dir() else None  # placeholder, replaced below
 
 from DNSCHAT import db
 
@@ -87,7 +89,7 @@ async def bot_sys_stats():
     RAM = f"{mem}%"
     DISK = f"{disk}%"
     return UP, CPU, RAM, DISK
-    
+
 
 async def set_default_status(chat_id):
     try:
@@ -104,17 +106,17 @@ async def welcomejej(client, message: Message):
     chats = len(await get_served_chats())
     try:
         for member in message.new_chat_members:
-            
+
             if member.id == DNSCHAT.id:
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(f"sᴇʟᴇᴄᴛ ʟᴀɴɢᴜᴀɢᴇ", callback_data="choose_lang")]])    
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(f"sᴇʟᴇᴄᴛ ʟᴀɴɢᴜᴀɢᴇ", callback_data="choose_lang")]])
                 await message.reply_photo(photo=random.choice(IMG), caption=START.format(DNSCHAT.mention or "can't mention", users, chats), reply_markup=reply_markup)
-                chat = message.chat   
+                chat = message.chat
                 try:
                     invitelink = await DNSCHAT.export_chat_invite_link(message.chat.id)
                     link = f"[ɢᴇᴛ ʟɪɴᴋ]({invitelink})"
                 except ChatAdminRequired:
                     link = "No Link"
-                    
+
                 try:
                     groups_photo = await DNSCHAT.download_media(
                         chat.photo.big_file_id, file_name=f"chatpp{chat.id}.png"
@@ -124,7 +126,7 @@ async def welcomejej(client, message: Message):
                     )
                 except AttributeError:
                     chat_photo = "https://files.catbox.moe/4itjd9.jpg"
-                
+
                 count = await DNSCHAT.get_chat_members_count(chat.id)
                 chats = len(await get_served_chats())
                 username = chat.username if chat.username else "𝐏ʀɪᴠᴀᴛᴇ 𝐆ʀᴏᴜᴘ"
@@ -141,7 +143,7 @@ async def welcomejej(client, message: Message):
 
                 try:
                     owner_username = True
-                    
+
                     if owner_username:
                         await DNSCHAT.send_photo(
                             int(OWNER_ID),
@@ -190,7 +192,7 @@ async def start(_, m: Message):
             text=random.choice(EMOJIOS),
         )
         await asyncio.sleep(0.5)
-        
+
         await accha.edit("**__ᴅ__**")
         await asyncio.sleep(0.01)
         await accha.edit("**__ᴅι__**")
@@ -233,9 +235,9 @@ async def start(_, m: Message):
         await asyncio.sleep(0.1)
         await accha.edit("**__ᴅιиg ᴅσиg ꨄ sтαятιиg.....__**")
         await accha.delete()
-        
+
         umm = await m.reply_sticker(sticker=random.choice(STICKER))
-        chat_photo = BOT  
+        chat_photo = BOT
         if m.chat.photo:
             try:
                 userss_photo = await DNSCHAT.download_media(m.chat.photo.big_file_id)
@@ -243,7 +245,7 @@ async def start(_, m: Message):
                 if userss_photo:
                     chat_photo = userss_photo
             except AttributeError:
-                chat_photo = BOT  
+                chat_photo = BOT
 
         users = len(await get_served_users())
         chats = len(await get_served_chats())
@@ -252,7 +254,7 @@ async def start(_, m: Message):
         await add_served_user(m.chat.id)
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(f"{m.chat.first_name}", user_id=m.chat.id)]])
         await DNSCHAT.send_photo(int(OWNER_ID), photo=chat_photo, caption=f"{m.from_user.mention} ʜᴀs sᴛᴀʀᴛᴇᴅ ʙᴏᴛ. \n\n**ɴᴀᴍᴇ :** {m.chat.first_name}\n**ᴜsᴇʀɴᴀᴍᴇ :** @{m.chat.username}\n**ɪᴅ :** {m.chat.id}\n\n**ᴛᴏᴛᴀʟ ᴜsᴇʀs :** {users}", reply_markup=keyboard)
-        
+
     else:
         await m.reply_photo(
             photo=random.choice(IMG),
@@ -323,11 +325,6 @@ async def stats(cli: Client, message: Message):
     )
 
 
-from pyrogram.enums import ParseMode
-
-from DNSCHAT import DNSCHAT
-
-
 @DNSCHAT.on_cmd("id")
 async def getid(client, message):
     chat = message.chat
@@ -337,9 +334,6 @@ async def getid(client, message):
 
     text = f"**[ᴍᴇssᴀɢᴇ ɪᴅ:]({message.link})** `{message_id}`\n"
     text += f"**[ʏᴏᴜʀ ɪᴅ:](tg://user?id={your_id})** `{your_id}`\n"
-
-    if not message.command:
-        message.command = message.text.split()
 
     if not message.command:
         message.command = message.text.split()
@@ -385,6 +379,10 @@ AUTO_SLEEP = 5
 IS_BROADCASTING = False
 broadcast_lock = asyncio.Lock()
 
+# Ordered longest-flag-first so substring matches (e.g. "-pin" inside
+# "-pinloud") don't collide with each other during detection/removal.
+BROADCAST_FLAGS = ["-pinloud", "-nogroup", "-user", "-pin"]
+
 
 @DNSCHAT.on_message(
     filters.command(["broadcast", "gcast"]) & filters.user(int(OWNER_ID))
@@ -410,26 +408,19 @@ async def broadcast_message(client, message):
             if message.reply_to_message:
                 broadcast_content = message.reply_to_message
                 broadcast_type = "reply"
-                flags = {
-                    "-pin": "-pin" in query,
-                    "-pinloud": "-pinloud" in query,
-                    "-nogroup": "-nogroup" in query,
-                    "-user": "-user" in query,
-                }
+                flags = {flag: flag in query for flag in BROADCAST_FLAGS}
             else:
                 if len(message.command) < 2:
                     return await message.reply_text(
                         "**Please provide text after the command or reply to a message for broadcasting.**"
                     )
-                
-                flags = {
-                    "-pin": "-pin" in query,
-                    "-pinloud": "-pinloud" in query,
-                    "-nogroup": "-nogroup" in query,
-                    "-user": "-user" in query,
-                }
 
-                for flag in flags:
+                flags = {flag: flag in query for flag in BROADCAST_FLAGS}
+
+                # Longest flags first so "-pinloud" is stripped whole,
+                # instead of "-pin" eating part of it and leaving "loud"
+                # behind in the broadcast text.
+                for flag in BROADCAST_FLAGS:
                     query = query.replace(flag, "").strip()
 
                 if not query:
@@ -437,10 +428,14 @@ async def broadcast_message(client, message):
                         "Please provide a valid text message or a flag: -pin, -nogroup, -pinloud, -user"
                     )
 
-                
+
                 broadcast_content = query
                 broadcast_type = "text"
-            
+
+            # "-pinloud" implies pinning too, but must never also trip the
+            # silent "-pin" path now that detection no longer collides.
+            if flags.get("-pinloud", False):
+                flags["-pin"] = False
 
             await message.reply_text("**Started broadcasting...**")
 
@@ -455,9 +450,9 @@ async def broadcast_message(client, message):
                         continue
                     try:
                         if broadcast_type == "reply":
-                            m = await DNSCHAT.forward_messages(
+                            m = (await DNSCHAT.forward_messages(
                                 chat_id, message.chat.id, [broadcast_content.id]
-                            )
+                            ))[0]
                         else:
                             m = await DNSCHAT.send_message(
                                 chat_id, text=broadcast_content
@@ -502,9 +497,9 @@ async def broadcast_message(client, message):
                     user_id = int(user["user_id"])
                     try:
                         if broadcast_type == "reply":
-                            m = await DNSCHAT.forward_messages(
+                            m = (await DNSCHAT.forward_messages(
                                 user_id, message.chat.id, [broadcast_content.id]
-                            )
+                            ))[0]
                         else:
                             m = await DNSCHAT.send_message(
                                 user_id, text=broadcast_content
@@ -530,8 +525,3 @@ async def broadcast_message(client, message):
 
         finally:
             IS_BROADCASTING = False
-
-
-    
-
-
