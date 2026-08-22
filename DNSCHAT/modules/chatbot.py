@@ -1,24 +1,20 @@
 import random
-from pymongo import MongoClient
 from pyrogram import Client, filters
 from pyrogram.errors import MessageEmpty
 from pyrogram.enums import ChatAction
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from deep_translator import GoogleTranslator 
+from deep_translator import GoogleTranslator
 from DNSCHAT.database.chats import add_served_chat
 from DNSCHAT.database.users import add_served_user
-from config import MONGO_URL
 from DNSCHAT import DNSCHAT, mongo, db
-from pyrogram.types import Message
 from DNSCHAT.modules.helpers import CHATBOT_ON
-from pymongo import MongoClient
-from DNSCHAT import mongo
 from pyrogram.enums import ChatMemberStatus as CMS
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup
 import asyncio
 import config
 from DNSCHAT import LOGGER, DNSCHAT
 from DNSCHAT.modules.helpers import (
+
     ABOUT_BTN,
     ABOUT_READ,
     ADMIN_READ,
@@ -33,9 +29,6 @@ from DNSCHAT.modules.helpers import (
     START,
     TOOLS_DATA_READ,
 )
-
-translator = GoogleTranslator()  
-from DNSCHAT import db
 
 # Simplified access to each collection in a consistent way
 chatai = db.Word.WordDb
@@ -56,58 +49,55 @@ async def status_command(client: Client, message: Message):
     else:
         await message.reply("No status found for this chat.")
 
-# Example usage of Client
 
 languages = {
     # Top 20 languages used on Telegram
-    'english': 'en', 'hindi': 'hi', 'Myanmar': 'my', 'russian': 'ru', 'spanish': 'es', 
-    'arabic': 'ar', 'turkish': 'tr', 'german': 'de', 'french': 'fr', 
+    'english': 'en', 'hindi': 'hi', 'myanmar': 'my', 'russian': 'ru', 'spanish': 'es',
+    'arabic': 'ar', 'turkish': 'tr', 'german': 'de', 'french': 'fr',
     'italian': 'it', 'persian': 'fa', 'indonesian': 'id', 'portuguese': 'pt',
-    'ukrainian': 'uk', 'filipino': 'tl', 'korean': 'ko', 'japanese': 'ja', 
+    'ukrainian': 'uk', 'filipino': 'tl', 'korean': 'ko', 'japanese': 'ja',
     'polish': 'pl', 'vietnamese': 'vi', 'thai': 'th', 'dutch': 'nl',
 
     # Top languages spoken in Bihar
-    'bhojpuri': 'bho', 'maithili': 'mai', 'urdu': 'ur', 
-    'bengali': 'bn', 'angika': 'anp', 'sanskrit': 'sa', 
-    'oriya': 'or', 'nepali': 'ne', 'santhali': 'sat', 'khortha': 'kht', 
-    'kurmali': 'kyu', 'ho': 'hoc', 'munda': 'unr', 'kharwar': 'kqw', 
+    'bhojpuri': 'bho', 'maithili': 'mai', 'urdu': 'ur',
+    'bengali': 'bn', 'angika': 'anp', 'sanskrit': 'sa',
+    'oriya': 'or', 'nepali': 'ne', 'santhali': 'sat', 'khortha': 'kht',
+    'kurmali': 'kyu', 'ho': 'hoc', 'munda': 'unr', 'kharwar': 'kqw',
     'mundari': 'unr', 'sadri': 'sck', 'pali': 'pi', 'tamil': 'ta',
 
     # Top languages spoken in India
-    'telugu': 'te', 'bengali': 'bn', 'marathi': 'mr', 'tamil': 'ta', 
-    'gujarati': 'gu', 'urdu': 'ur', 'kannada': 'kn', 'malayalam': 'ml', 
-    'odia': 'or', 'punjabi': 'pa', 'assamese': 'as', 'sanskrit': 'sa', 
-    'kashmiri': 'ks', 'konkani': 'gom', 'sindhi': 'sd', 'bodo': 'brx', 
-    'dogri': 'doi', 'santali': 'sat', 'meitei': 'mni', 'nepali': 'ne',
+    'telugu': 'te', 'marathi': 'mr', 'gujarati': 'gu', 'kannada': 'kn',
+    'malayalam': 'ml', 'odia': 'or', 'punjabi': 'pa', 'assamese': 'as',
+    'kashmiri': 'ks', 'konkani': 'gom', 'sindhi': 'sd', 'bodo': 'brx',
+    'dogri': 'doi', 'santali': 'sat', 'meitei': 'mni',
 
     # Other language
-    'afrikaans': 'af', 'albanian': 'sq', 'amharic': 'am', 'armenian': 'hy', 
-    'aymara': 'ay', 'azerbaijani': 'az', 'bambara': 'bm', 
-    'basque': 'eu', 'belarusian': 'be', 'bosnian': 'bs', 'bulgarian': 'bg', 
-    'catalan': 'ca', 'cebuano': 'ceb', 'chichewa': 'ny', 
-    'chinese (simplified)': 'zh-CN', 'chinese (traditional)': 'zh-TW', 
-    'corsican': 'co', 'croatian': 'hr', 'czech': 'cs', 'danish': 'da', 
-    'dhivehi': 'dv', 'esperanto': 'eo', 'estonian': 'et', 'ewe': 'ee', 
-    'finnish': 'fi', 'frisian': 'fy', 'galician': 'gl', 'georgian': 'ka', 
-    'greek': 'el', 'guarani': 'gn', 'haitian creole': 'ht', 'hausa': 'ha', 
-    'hawaiian': 'haw', 'hebrew': 'iw', 'hmong': 'hmn', 'hungarian': 'hu', 
-    'icelandic': 'is', 'igbo': 'ig', 'ilocano': 'ilo', 'irish': 'ga', 
-    'javanese': 'jw', 'kazakh': 'kk', 'khmer': 'km', 'kinyarwanda': 'rw', 
-    'krio': 'kri', 'kurdish (kurmanji)': 'ku', 'kurdish (sorani)': 'ckb', 
-    'kyrgyz': 'ky', 'lao': 'lo', 'latin': 'la', 'latvian': 'lv', 
-    'lingala': 'ln', 'lithuanian': 'lt', 'luganda': 'lg', 'luxembourgish': 'lb', 
-    'macedonian': 'mk', 'malagasy': 'mg', 'maltese': 'mt', 'maori': 'mi', 
-    'mizo': 'lus', 'mongolian': 'mn', 'myanmar': 'my', 'norwegian': 'no', 
-    'oromo': 'om', 'pashto': 'ps', 'quechua': 'qu', 'romanian': 'ro', 
-    'samoan': 'sm', 'scots gaelic': 'gd', 'sepedi': 'nso', 'serbian': 'sr', 
-    'sesotho': 'st', 'shona': 'sn', 'sinhala': 'si', 'slovak': 'sk', 
-    'slovenian': 'sl', 'somali': 'so', 'sundanese': 'su', 'swahili': 'sw', 
-    'swedish': 'sv', 'tajik': 'tg', 'tatar': 'tt', 'tigrinya': 'ti', 
-    'tsonga': 'ts', 'turkmen': 'tk', 'twi': 'ak', 'uyghur': 'ug', 
-    'uzbek': 'uz', 'welsh': 'cy', 'xhosa': 'xh', 'yiddish': 'yi', 
+    'afrikaans': 'af', 'albanian': 'sq', 'amharic': 'am', 'armenian': 'hy',
+    'aymara': 'ay', 'azerbaijani': 'az', 'bambara': 'bm',
+    'basque': 'eu', 'belarusian': 'be', 'bosnian': 'bs', 'bulgarian': 'bg',
+    'catalan': 'ca', 'cebuano': 'ceb', 'chichewa': 'ny',
+    'chinese (simplified)': 'zh-CN', 'chinese (traditional)': 'zh-TW',
+    'corsican': 'co', 'croatian': 'hr', 'czech': 'cs', 'danish': 'da',
+    'dhivehi': 'dv', 'esperanto': 'eo', 'estonian': 'et', 'ewe': 'ee',
+    'finnish': 'fi', 'frisian': 'fy', 'galician': 'gl', 'georgian': 'ka',
+    'greek': 'el', 'guarani': 'gn', 'haitian creole': 'ht', 'hausa': 'ha',
+    'hawaiian': 'haw', 'hebrew': 'iw', 'hmong': 'hmn', 'hungarian': 'hu',
+    'icelandic': 'is', 'igbo': 'ig', 'ilocano': 'ilo', 'irish': 'ga',
+    'javanese': 'jw', 'kazakh': 'kk', 'khmer': 'km', 'kinyarwanda': 'rw',
+    'krio': 'kri', 'kurdish (kurmanji)': 'ku', 'kurdish (sorani)': 'ckb',
+    'kyrgyz': 'ky', 'lao': 'lo', 'latin': 'la', 'latvian': 'lv',
+    'lingala': 'ln', 'lithuanian': 'lt', 'luganda': 'lg', 'luxembourgish': 'lb',
+    'macedonian': 'mk', 'malagasy': 'mg', 'maltese': 'mt', 'maori': 'mi',
+    'mizo': 'lus', 'mongolian': 'mn', 'norwegian': 'no',
+    'oromo': 'om', 'pashto': 'ps', 'quechua': 'qu', 'romanian': 'ro',
+    'samoan': 'sm', 'scots gaelic': 'gd', 'sepedi': 'nso', 'serbian': 'sr',
+    'sesotho': 'st', 'shona': 'sn', 'sinhala': 'si', 'slovak': 'sk',
+    'slovenian': 'sl', 'somali': 'so', 'sundanese': 'su', 'swahili': 'sw',
+    'swedish': 'sv', 'tajik': 'tg', 'tatar': 'tt', 'tigrinya': 'ti',
+    'tsonga': 'ts', 'turkmen': 'tk', 'twi': 'ak', 'uyghur': 'ug',
+    'uzbek': 'uz', 'welsh': 'cy', 'xhosa': 'xh', 'yiddish': 'yi',
     'yoruba': 'yo', 'zulu': 'zu'
 }
-
 
 
 def generate_language_buttons(languages):
@@ -122,11 +112,12 @@ def generate_language_buttons(languages):
         buttons.append(current_row)
     return InlineKeyboardMarkup(buttons)
 
+
 async def get_chat_language(chat_id):
-    # Await the async call to find_one
     chat_lang = await lang_db.find_one({"chat_id": chat_id})
     return chat_lang["language"] if chat_lang and "language" in chat_lang else "en"
-    
+
+
 @DNSCHAT.on_message(filters.command(["lang", "language", "setlang"]))
 async def set_language(client: Client, message: Message):
     await message.reply_text(
@@ -140,18 +131,17 @@ async def language_selection_callback(client: Client, callback_query: CallbackQu
     lang_code = callback_query.data.split("_")[1]
     chat_id = callback_query.message.chat.id
     if lang_code in languages.values():
-        lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": lang_code}}, upsert=True)
+        await lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": lang_code}}, upsert=True)
         await callback_query.answer(f"Your chat language has been set to {lang_code.title()}.", show_alert=True)
         await callback_query.message.edit_text(f"Chat language has been set to {lang_code.title()}.")
     else:
         await callback_query.answer("Invalid language selection.", show_alert=True)
 
 
-
 @DNSCHAT.on_message(filters.command(["resetlang", "nolang"]))
 async def reset_language(client: Client, message: Message):
     chat_id = message.chat.id
-    lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": "nolang"}}, upsert=True)
+    await lang_db.update_one({"chat_id": chat_id}, {"$set": {"language": "nolang"}}, upsert=True)
     await message.reply_text("**Bot language has been reset in this chat to mix language.**")
 
 
@@ -168,6 +158,7 @@ async def chatbot_command(client: Client, message: Message):
         f"Chat: {message.chat.title}\n**Choose an option to enable/disable the chatbot.**",
         reply_markup=InlineKeyboardMarkup(CHATBOT_ON),
     )
+
 
 @DNSCHAT.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
@@ -247,7 +238,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # Enable chatbot for the chat
     elif query.data == "enable_chatbot":
         chat_id = query.message.chat.id
-        status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "enabled"}}, upsert=True)
+        await status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "enabled"}}, upsert=True)
         await query.answer("Chatbot enabled ✅", show_alert=True)
         await query.edit_message_text(
             f"Chat: {query.message.chat.title}\n**Chatbot has been enabled.**"
@@ -256,7 +247,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     # Disable chatbot for the chat
     elif query.data == "disable_chatbot":
         chat_id = query.message.chat.id
-        status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "disabled"}}, upsert=True)
+        await status_db.update_one({"chat_id": chat_id}, {"$set": {"status": "disabled"}}, upsert=True)
         await query.answer("Chatbot disabled!", show_alert=True)
         await query.edit_message_text(
             f"Chat: {query.message.chat.title}\n**Chatbot has been disabled.**"
@@ -271,8 +262,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
 
-
-        
 @DNSCHAT.on_message(filters.incoming)
 async def chatbot_response(client: Client, message: Message):
     try:
@@ -310,7 +299,7 @@ async def chatbot_response(client: Client, message: Message):
                     translated_text = response_text
                 else:
                     translated_text = GoogleTranslator(source='auto', target=chat_lang).translate(response_text)
-                
+
                 if reply_data["check"] == "sticker":
                     await message.reply_sticker(reply_data["text"])
                 elif reply_data["check"] == "photo":
@@ -320,19 +309,20 @@ async def chatbot_response(client: Client, message: Message):
                 elif reply_data["check"] == "audio":
                     await message.reply_audio(reply_data["text"])
                 elif reply_data["check"] == "gif":
-                    await message.reply_animation(reply_data["text"]) 
+                    await message.reply_animation(reply_data["text"])
                 else:
                     await message.reply_text(translated_text)
             else:
                 await message.reply_text("**I don't understand. what are you saying??**")
-        
+
         if message.reply_to_message:
             await save_reply(message.reply_to_message, message)
-    except MessageEmpty as e:
+    except MessageEmpty:
         return await message.reply_text("🙄🙄")
     except Exception as e:
         LOGGER.error(f"chatbot_response error: {e}")
         return
+
 
 async def save_reply(original_message: Message, reply_message: Message):
     try:
@@ -388,7 +378,7 @@ async def save_reply(original_message: Message, reply_message: Message):
                     "check": "audio",
                 })
 
-        elif reply_message.animation:  
+        elif reply_message.animation:
             is_chat = await chatai.find_one({
                 "word": original_message.text,
                 "text": reply_message.animation.file_id,
@@ -416,6 +406,7 @@ async def save_reply(original_message: Message, reply_message: Message):
 
     except Exception as e:
         print(f"Error in save_reply: {e}")
+
 
 async def get_reply(word: str):
     try:
