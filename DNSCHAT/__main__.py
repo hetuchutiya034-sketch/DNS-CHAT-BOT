@@ -80,5 +80,6 @@ if __name__ == "__main__":
     flask_thread.start()
     LOGGER.info(f"Health check server started on port {os.environ.get('PORT', 10000)}")
 
-    asyncio.get_event_loop().run_until_complete(anony_boot())
+    # YE LINE CHANGE KI HAI BAS
+    asyncio.run(anony_boot()) 
     LOGGER.info("Stopping DNSCHAT Bot...")
