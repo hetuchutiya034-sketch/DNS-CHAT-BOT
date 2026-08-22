@@ -1,11 +1,10 @@
 pyrogram==2.0.106
-python-telegram-bot==20.7
+tgcrypto
 pymongo
 motor
-requests
 dnspython
-tgcrypto
 python-dotenv
+requests
 google-generativeai
 openai
 googletrans==4.0.0rc1
