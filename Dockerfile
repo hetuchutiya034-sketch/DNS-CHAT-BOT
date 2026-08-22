@@ -1,13 +1,19 @@
-FROM python:3.10-slim
+FROM python:3.11-slim-bookworm
 
-RUN apt-get update -y && apt-get upgrade -y
+WORKDIR /app
 
-RUN pip3 install -U pip
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . /app/
-WORKDIR /app/
-RUN pip3 install --upgrade pip
-RUN pip3 install -U -r requirements.txt
+COPY requirements.txt .
+RUN pip3 install --upgrade pip setuptools wheel \
+    && pip3 install --no-cache-dir -r requirements.txt
 
-CMD bash start
+COPY . .
 
+CMD ["bash", "start"]
