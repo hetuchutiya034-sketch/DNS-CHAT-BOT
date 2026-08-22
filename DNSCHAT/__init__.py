@@ -1,13 +1,13 @@
 import logging
 import time
+import asyncio
 from pymongo import MongoClient
 from motor.motor_asyncio import AsyncIOMotorClient as MongoCli
 from pyrogram import Client
 from pyrogram.enums import ParseMode
 import config
-import uvloop
 
-uvloop.install()
+asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 
 logging.basicConfig(
     format="[%(asctime)s - %(levelname)s] - %(name)s - %(message)s",
@@ -48,9 +48,10 @@ class DNSCHAT(Client):
     async def start(self):
         await super().start()
         self.id = self.me.id
-        self.name = self.me.first_name + " " + (self.me.last_name or "")
+        self.name = self.me.first_name + " + (self.me.last_name or "")
         self.username = self.me.username
         self.mention = self.me.mention
+        LOGGER.info(f"Bot Started as {self.name}")
 
     async def stop(self):
         await super().stop()
